@@ -405,13 +405,6 @@ fn main() {
     return;
   }
 
-  // Host snapshots won't work when cross compiling.
-  let target = env::var("TARGET").unwrap();
-  let host = env::var("HOST").unwrap();
-  if target != host {
-    panic!("Cross compiling with snapshot is not supported.");
-  }
-
   let symbols_path = std::path::Path::new("napi").join(
     format!("generated_symbol_exports_list_{}.def", env::consts::OS).as_str(),
   )
@@ -472,14 +465,24 @@ fn main() {
   println!("cargo:rustc-env=TARGET={}", env::var("TARGET").unwrap());
   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
 
-  let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-  let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+  #[cfg(feature = "tools")]
+  {
+    // Host snapshots won't work when cross compiling.
+    let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
+    let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
-  let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
-  ts::create_compiler_snapshot(compiler_snapshot_path, &c);
+    let target = env::var("TARGET").unwrap();
+    let host = env::var("HOST").unwrap();
+    if target != host {
+      panic!("Cross compiling with snapshot is not supported.");
+    }
 
-  let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
-  create_cli_snapshot(cli_snapshot_path);
+    let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
+    ts::create_compiler_snapshot(compiler_snapshot_path, &c);
+
+    let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
+    create_cli_snapshot(cli_snapshot_path);
+  }
 
   #[cfg(target_os = "windows")]
   {

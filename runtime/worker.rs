@@ -293,16 +293,15 @@ impl MainWorker {
     extensions.extend(std::mem::take(&mut options.extensions));
 
     #[cfg(not(feature = "dont_create_runtime_snapshot"))]
-    let startup_snapshot = options
+    let startup_snapshot = Some(options
       .startup_snapshot
-      .unwrap_or_else(crate::js::deno_isolate_init);
+      .unwrap_or_else(crate::js::deno_isolate_init));
     #[cfg(feature = "dont_create_runtime_snapshot")]
-    let startup_snapshot = options.startup_snapshot
-      .expect("deno_runtime startup snapshot is not available with 'create_runtime_snapshot' Cargo feature.");
+    let startup_snapshot = options.startup_snapshot;
 
     let mut js_runtime = JsRuntime::new(RuntimeOptions {
       module_loader: Some(options.module_loader.clone()),
-      startup_snapshot: Some(startup_snapshot),
+      startup_snapshot,
       source_map_getter: options.source_map_getter,
       get_error_class_fn: options.get_error_class_fn,
       shared_array_buffer_store: options.shared_array_buffer_store.clone(),

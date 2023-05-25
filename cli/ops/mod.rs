@@ -6,7 +6,10 @@ use deno_core::op;
 use deno_core::Extension;
 use deno_core::OpState;
 
+#[cfg(feature = "tools")]
 pub mod bench;
+
+#[cfg(feature = "tools")]
 pub mod testing;
 
 pub fn cli_exts(ps: ProcState) -> Vec<Extension> {
