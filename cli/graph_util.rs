@@ -11,6 +11,8 @@ use crate::errors::get_error_class_name;
 use crate::file_fetcher::FileFetcher;
 use crate::npm::CliNpmResolver;
 use crate::resolver::CliGraphResolver;
+
+#[cfg(feature = "tools")]
 use crate::tools::check;
 use crate::tools::check::TypeChecker;
 
@@ -239,6 +241,7 @@ impl ModuleGraphBuilder {
     Ok(graph)
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_graph_and_maybe_check(
     &self,
     roots: Vec<ModuleSpecifier>,

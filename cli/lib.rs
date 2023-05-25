@@ -1,32 +1,42 @@
-pub mod args;
-pub mod auth_tokens;
-pub mod cache;
-pub mod deno_std;
-pub mod emit;
-pub mod errors;
-pub mod file_fetcher;
-pub mod graph_util;
-pub mod http_util;
-pub mod js;
+mod args;
+mod auth_tokens;
+mod cache;
+mod deno_std;
+mod emit;
+mod errors;
+mod factory;
+mod file_fetcher;
+mod graph_util;
+mod http_util;
+
+#[cfg(feature = "tools")]
+mod js;
+
+#[cfg(feature = "tools")]
 pub mod lsp;
-pub mod module_loader;
-pub mod napi;
-pub mod node;
-pub mod npm;
-pub mod ops;
-pub mod proc_state;
-pub mod resolver;
+
+mod module_loader;
+mod napi;
+mod node;
+mod npm;
+mod ops;
+mod resolver;
+
+#[cfg(feature = "tools")]
 pub mod standalone;
-pub mod tools;
-pub mod tsc;
-pub mod util;
-pub mod version;
-pub mod worker;
+
+mod tools;
+#[cfg(feature = "tools")]
+mod tsc;
+
+mod util;
+mod version;
+mod watcher;
+mod worker;
 
 pub use crate::args::flags_from_vec;
 pub use crate::args::DenoSubcommand;
 pub use crate::args::Flags;
-pub use crate::proc_state::ProcState;
 pub use crate::resolver::CliGraphResolver;
 pub use crate::util::display;
 pub use crate::util::v8::get_v8_flags_from_env;
@@ -39,6 +49,6 @@ pub use deno_core::error::JsError;
 pub use deno_runtime::colors;
 pub use deno_runtime::fmt_errors::format_js_error;
 pub use deno_runtime::tokio_util::run_local;
+pub use factory::CliFactory;
 pub use std::env;
 pub use std::path::PathBuf;
-
