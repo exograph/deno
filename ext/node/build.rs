@@ -7,4 +7,8 @@ fn main() {
     "cargo:rustc-env=NODE_GLOBAL_THIS_NAME=__DENO_NODE_GLOBAL_THIS_{}__",
     crate_version.replace('.', "_")
   );
+  println!(
+    "cargo:rustc-env=TARGET={}",
+    std::env::var("TARGET").unwrap()
+  );
 }
