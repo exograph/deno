@@ -1,19 +1,35 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
+#[cfg(feature = "tools")]
 pub mod bench;
+#[cfg(feature = "tools")]
 pub mod bundle;
 pub mod check;
+#[cfg(feature = "tools")]
 pub mod coverage;
+#[cfg(feature = "tools")]
 pub mod doc;
+#[cfg(feature = "tools")]
 pub mod fmt;
+#[cfg(feature = "tools")]
 pub mod info;
+#[cfg(feature = "tools")]
 pub mod init;
+#[cfg(feature = "tools")]
 pub mod installer;
+#[cfg(feature = "tools")]
 pub mod lint;
+#[cfg(feature = "tools")]
 pub mod repl;
+#[cfg(feature = "tools")]
 pub mod run;
+#[cfg(feature = "tools")]
 pub mod standalone;
+#[cfg(feature = "tools")]
 pub mod task;
+#[cfg(feature = "tools")]
 pub mod test;
+#[cfg(feature = "tools")]
 pub mod upgrade;
+#[cfg(feature = "tools")]
 pub mod vendor;

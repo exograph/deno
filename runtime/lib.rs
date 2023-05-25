@@ -40,3 +40,6 @@ pub struct RuntimeNodeEnv;
 impl deno_node::NodeEnv for RuntimeNodeEnv {
   type P = permissions::PermissionsContainer;
 }
+
+#[cfg(feature = "launch_without_snapshot")]
+pub(crate) mod transpile_ts;
