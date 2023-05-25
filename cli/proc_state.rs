@@ -31,6 +31,7 @@ use crate::npm::NpmRegistryApi;
 use crate::npm::NpmResolution;
 use crate::npm::PackageJsonDepsInstaller;
 use crate::resolver::CliGraphResolver;
+#[cfg(feature = "tools")]
 use crate::tools::check;
 use crate::util::progress_bar::ProgressBar;
 use crate::util::progress_bar::ProgressBarStyle;
@@ -332,6 +333,7 @@ impl ProcState {
   /// populate `self.graph_data` in memory with the necessary source code, write
   /// emits where necessary or report any module graph / type checking errors.
   #[allow(clippy::too_many_arguments)]
+  #[cfg(feature = "tools")]
   pub async fn prepare_module_load(
     &self,
     roots: Vec<ModuleSpecifier>,
@@ -452,6 +454,7 @@ impl ProcState {
 
   /// Helper around prepare_module_load that loads and type checks
   /// the provided files.
+  #[cfg(feature = "tools")]
   pub async fn load_and_type_check_files(
     &self,
     files: &[String],

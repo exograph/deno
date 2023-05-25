@@ -12,6 +12,8 @@ use crate::errors::get_error_class_name;
 use crate::npm::NpmPackageResolver;
 use crate::proc_state::ProcState;
 use crate::resolver::CliGraphResolver;
+
+#[cfg(feature = "tools")]
 use crate::tools::check;
 
 use deno_core::anyhow::bail;
@@ -155,6 +157,7 @@ pub fn graph_lock_or_exit(graph: &ModuleGraph, lockfile: &mut Lockfile) {
   }
 }
 
+#[cfg(feature = "tools")]
 pub async fn create_graph_and_maybe_check(
   roots: Vec<ModuleSpecifier>,
   ps: &ProcState,

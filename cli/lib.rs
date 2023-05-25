@@ -1,27 +1,41 @@
-pub mod args;
-pub mod auth_tokens;
-pub mod cache;
-pub mod deno_std;
-pub mod emit;
-pub mod errors;
-pub mod file_fetcher;
-pub mod graph_util;
-pub mod http_util;
-pub mod js;
+mod args;
+mod auth_tokens;
+mod cache;
+mod deno_std;
+mod emit;
+mod errors;
+mod file_fetcher;
+mod graph_util;
+mod http_util;
+
+#[cfg(feature = "tools")]
+mod js;
+
+#[cfg(feature = "tools")]
 pub mod lsp;
-pub mod module_loader;
-pub mod napi;
-pub mod node;
-pub mod npm;
-pub mod ops;
-pub mod proc_state;
-pub mod resolver;
+
+#[cfg(feature = "tools")]
+mod module_loader;
+mod napi;
+mod node;
+mod npm;
+mod ops;
+mod proc_state;
+mod resolver;
+
+#[cfg(feature = "tools")]
 pub mod standalone;
-pub mod tools;
-pub mod tsc;
-pub mod util;
-pub mod version;
-pub mod worker;
+
+#[cfg(feature = "tools")]
+mod tools;
+#[cfg(feature = "tools")]
+mod tsc;
+
+mod util;
+mod version;
+
+#[cfg(feature = "tools")]
+mod worker;
 
 pub use crate::args::flags_from_vec;
 pub use crate::args::DenoSubcommand;
