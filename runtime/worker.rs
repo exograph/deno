@@ -31,6 +31,11 @@ use deno_core::SharedArrayBufferStore;
 use deno_core::Snapshot;
 use deno_core::SourceMapGetter;
 use deno_fs::StdFs;
+
+#[cfg(feature = "launch_without_snapshot")]
+use deno_core::{
+  ExtensionFileSource, ExtensionFileSourceCode,
+};
 use deno_io::Stdio;
 use deno_kv::sqlite::SqliteDbHandler;
 use deno_node::RequireNpmResolver;
@@ -38,10 +43,14 @@ use deno_tls::rustls::RootCertStore;
 use deno_web::BlobStore;
 use log::debug;
 
+use crate::RuntimeNodeEnv;
 use crate::inspector_server::InspectorServer;
 use crate::ops;
 use crate::permissions::PermissionsContainer;
 use crate::BootstrapOptions;
+
+#[cfg(feature = "launch_without_snapshot")]
+use crate::transpile_ts::transpile_ts_for_snapshotting;
 
 pub type FormatJsErrorFn = dyn Fn(&JsError) -> String + Sync + Send;
 
@@ -215,6 +224,111 @@ impl MainWorker {
 
     // NOTE(bartlomieju): ordering is important here, keep it in sync with
     // `runtime/build.rs`, `runtime/web_worker.rs` and `cli/build.rs`!
+    #[cfg(feature = "launch_without_snapshot")]
+    deno_core::extension!(runtime,
+      deps = [
+        deno_webidl,
+        deno_console,
+        deno_url,
+        deno_tls,
+        deno_web,
+        deno_fetch,
+        deno_cache,
+        deno_websocket,
+        deno_webstorage,
+        deno_crypto,
+        deno_broadcast_channel,
+        // FIXME(bartlomieju): this should be reenabled
+        // "deno_node",
+        deno_ffi,
+        deno_net,
+        deno_napi,
+        deno_http,
+        deno_io,
+        deno_fs
+      ],
+      esm = [
+        dir "js",
+        "01_errors.js",
+        "01_version.ts",
+        "06_util.js",
+        "10_permissions.js",
+        "11_workers.js",
+        "13_buffer.js",
+        "30_os.js",
+        "40_fs_events.js",
+        "40_http.js",
+        "40_process.js",
+        "40_signals.js",
+        "40_tty.js",
+        "41_prompt.js",
+        "90_deno_ns.js",
+        "98_global_scope.js"
+      ],
+    );
+
+    // NOTE(bartlomieju): ordering is important here, keep it in sync with
+    // `runtime/worker.rs`, `runtime/web_worker.rs` and `cli/build.rs`!
+    #[cfg(feature = "launch_without_snapshot")]
+    let mut extensions: Vec<Extension> = vec![
+      deno_webidl::deno_webidl::init_ops_and_esm(),
+      deno_console::deno_console::init_ops_and_esm(),
+      deno_url::deno_url::init_ops_and_esm(),
+      deno_web::deno_web::init_ops_and_esm::<PermissionsContainer>(
+        Default::default(),
+        Default::default(),
+      ),
+      deno_fetch::deno_fetch::init_ops_and_esm::<PermissionsContainer>(
+        Default::default(),
+      ),
+      deno_cache::deno_cache::init_ops_and_esm::<SqliteBackedCache>(None),
+      deno_websocket::deno_websocket::init_ops_and_esm::<PermissionsContainer>(
+        "".to_owned(),
+        None,
+        None,
+      ),
+      deno_webstorage::deno_webstorage::init_ops_and_esm(None),
+      deno_crypto::deno_crypto::init_ops_and_esm(None),
+      deno_broadcast_channel::deno_broadcast_channel::init_ops_and_esm(
+        deno_broadcast_channel::InMemoryBroadcastChannel::default(),
+        false, // No --unstable.
+      ),
+      deno_ffi::deno_ffi::init_ops_and_esm::<PermissionsContainer>(false),
+      deno_net::deno_net::init_ops_and_esm::<PermissionsContainer>(
+        None, false, // No --unstable.
+        None,
+      ),
+      deno_tls::deno_tls::init_ops_and_esm(),
+      deno_kv::deno_kv::init_ops_and_esm(
+        deno_kv::sqlite::SqliteDbHandler::<PermissionsContainer>::new(None),
+        false, // No --unstable
+      ),
+      deno_napi::deno_napi::init_ops_and_esm::<PermissionsContainer>(),
+      deno_http::deno_http::init_ops_and_esm(),
+      deno_io::deno_io::init_ops_and_esm(Default::default()),
+      deno_fs::deno_fs::init_ops_and_esm::<_, PermissionsContainer>(false, StdFs),
+      runtime::init_ops_and_esm(),
+      // FIXME(bartlomieju): these extensions are specified last, because they
+      // depend on `runtime`, even though it should be other way around
+      deno_node::deno_node::init_ops_and_esm::<RuntimeNodeEnv>(None),
+      runtime_main::init_ops_and_esm(),
+    ];
+
+    #[cfg(feature = "launch_without_snapshot")]
+    deno_core::extension!(
+      runtime_main,
+      deps = [runtime],
+      customizer = |ext: &mut deno_core::ExtensionBuilder| {
+        ext.esm(vec![ExtensionFileSource {
+          specifier: "ext:runtime_main/js/99_main.js",
+          code: deno_core::ExtensionFileSourceCode::IncludedInBinary(
+            include_str!("js/99_main.js"),
+          ),
+        }]);
+        ext.esm_entry_point("ext:runtime_main/js/99_main.js");
+      }
+    );
+    #[cfg(not(feature = "launch_without_snapshot"))]
     let mut extensions = vec![
       // Web APIs
       deno_webidl::deno_webidl::init_ops(),
@@ -294,16 +408,18 @@ impl MainWorker {
     extensions.extend(std::mem::take(&mut options.extensions));
 
     #[cfg(not(feature = "dont_create_runtime_snapshot"))]
-    let startup_snapshot = options
-      .startup_snapshot
-      .unwrap_or_else(crate::js::deno_isolate_init);
+    let startup_snapshot = Some(
+      options
+        .startup_snapshot
+        .unwrap_or_else(crate::js::deno_isolate_init),
+    );
+
     #[cfg(feature = "dont_create_runtime_snapshot")]
-    let startup_snapshot = options.startup_snapshot
-      .expect("deno_runtime startup snapshot is not available with 'create_runtime_snapshot' Cargo feature.");
+    let startup_snapshot = options.startup_snapshot;
 
     let mut js_runtime = JsRuntime::new(RuntimeOptions {
       module_loader: Some(options.module_loader.clone()),
-      startup_snapshot: Some(startup_snapshot),
+      startup_snapshot,
       source_map_getter: options.source_map_getter,
       get_error_class_fn: options.get_error_class_fn,
       shared_array_buffer_store: options.shared_array_buffer_store.clone(),
@@ -311,6 +427,8 @@ impl MainWorker {
       extensions,
       inspector: options.maybe_inspector_server.is_some(),
       is_main: true,
+      #[cfg(feature = "launch_without_snapshot")]
+      snapshot_module_load_cb: Some(Box::new(transpile_ts_for_snapshotting)),
       ..Default::default()
     });
 

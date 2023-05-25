@@ -16,6 +16,7 @@ use crate::file_fetcher::FileFetcher;
 use crate::graph_util::ModuleGraphBuilder;
 use crate::graph_util::ModuleGraphContainer;
 use crate::http_util::HttpClient;
+#[cfg(feature = "tools")]
 use crate::module_loader::ModuleLoadPreparer;
 use crate::node::CliNodeResolver;
 use crate::node::NodeCodeTranslator;
@@ -26,6 +27,7 @@ use crate::npm::NpmPackageResolver;
 use crate::npm::NpmResolution;
 use crate::npm::PackageJsonDepsInstaller;
 use crate::resolver::CliGraphResolver;
+#[cfg(feature = "tools")]
 use crate::tools::check::TypeChecker;
 use crate::util::progress_bar::ProgressBar;
 use crate::util::progress_bar::ProgressBarStyle;
@@ -74,6 +76,7 @@ pub struct Inner {
   pub resolver: Arc<CliGraphResolver>,
   maybe_file_watcher_reporter: Option<FileWatcherReporter>,
   pub module_graph_builder: Arc<ModuleGraphBuilder>,
+  #[cfg(feature = "tools")]
   pub module_load_preparer: Arc<ModuleLoadPreparer>,
   pub node_code_translator: Arc<NodeCodeTranslator>,
   pub node_resolver: Arc<CliNodeResolver>,
@@ -145,6 +148,7 @@ impl ProcState {
       resolver: self.resolver.clone(),
       maybe_file_watcher_reporter: self.maybe_file_watcher_reporter.clone(),
       module_graph_builder: self.module_graph_builder.clone(),
+      #[cfg(feature = "tools")]
       module_load_preparer: self.module_load_preparer.clone(),
       node_code_translator: self.node_code_translator.clone(),
       node_resolver: self.node_resolver.clone(),
@@ -313,6 +317,7 @@ impl ProcState {
       npm_resolution.clone(),
       npm_resolver.clone(),
     ));
+    #[cfg(feature = "tools")]
     let type_checker = Arc::new(TypeChecker::new(
       dir.clone(),
       caches.clone(),
@@ -328,9 +333,11 @@ impl ProcState {
       lockfile.clone(),
       emit_cache.clone(),
       file_fetcher.clone(),
+      #[cfg(feature = "tools")]
       type_checker.clone(),
     ));
     let graph_container: Arc<ModuleGraphContainer> = Default::default();
+    #[cfg(feature = "tools")]
     let module_load_preparer = Arc::new(ModuleLoadPreparer::new(
       cli_options.clone(),
       graph_container.clone(),
@@ -372,6 +379,7 @@ impl ProcState {
       npm_resolution,
       package_json_deps_installer,
       cjs_resolutions: Default::default(),
+      #[cfg(feature = "tools")]
       module_load_preparer,
       progress_bar,
     })))

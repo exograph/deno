@@ -11,6 +11,33 @@ license.workspace = true
 repository.workspace = true
 description = "Provides the deno executable"
 
+[features]
+default = ["tools"]
+tools = [
+  "deno_doc",
+  "deno_emit",
+  "deno_lint",
+  "deno_core/include_js_files_for_snapshotting",
+  "deno_runtime/include_js_files_for_snapshotting",
+  "deno_runtime/dont_create_runtime_snapshot",
+  "deno_task_shell",
+  "dprint-plugin-json",
+  "dprint-plugin-markdown",
+  "dprint-plugin-typescript",
+  "eszip",
+  "fancy-regex",
+  "lsp-types",
+  "os_pipe",
+  "rustyline",
+  "rustyline-derive",
+  "serde_repr",
+  "shell-escape",
+  "tempfile",
+  "text-size",
+  "tower-lsp",
+  "zstd"
+]
+
 [lib]
 name = "deno"
 path = "lib.rs"
@@ -45,17 +72,16 @@ winres.workspace = true
 
 [dependencies]
 deno_ast = { workspace = true, features = ["bundler", "cjs", "codegen", "dep_graph", "module_specifier", "proposal", "react", "sourcemap", "transforms", "typescript", "view", "visit"] }
-deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
-deno_doc = "0.61.0"
-deno_emit = "0.19.0"
+deno_core = { workspace = true }
+deno_doc = { version = "0.61.0", optional = true }
+deno_emit = { version = "0.19.0", optional = true }
 deno_graph = "=0.47.1"
-deno_lint = { version = "0.43.0", features = ["docs"] }
+deno_lint = { version = "0.43.0", features = ["docs"], optional = true }
 deno_lockfile.workspace = true
 deno_npm = "0.3.0"
-deno_runtime = { workspace = true, features = ["dont_create_runtime_snapshot", "include_js_files_for_snapshotting"] }
-deno_runtime = { workspace = true, features = ["include_js_files_for_snapshotting"] }
+deno_runtime = { workspace = true }
 deno_semver = "0.2.0"
-deno_task_shell = "0.11.0"
+deno_task_shell = { version = "0.11.0", optional = true }
 napi_sym.workspace = true
 
 async-trait.workspace = true
@@ -70,13 +96,13 @@ clap_complete_fig = "=4.1.2"
 console_static_text.workspace = true
 data-url.workspace = true
 dissimilar = "=1.0.4"
-dprint-plugin-json = "=0.17.0"
-dprint-plugin-markdown = "=0.15.2"
-dprint-plugin-typescript = "=0.84.0"
+dprint-plugin-json = { version = "=0.17.0", optional = true }
+dprint-plugin-markdown = { version = "=0.15.2", optional = true }
+dprint-plugin-typescript = { version = "=0.84.0", optional = true }
 encoding_rs.workspace = true
 env_logger = "=0.9.0"
-eszip = "=0.40.0"
-fancy-regex = "=0.10.0"
+eszip = { version = "=0.40.0", optional = true }
+fancy-regex = { version = "=0.10.0", optional = true }
 flate2.workspace = true
 fs3.workspace = true
 http.workspace = true
@@ -86,34 +112,34 @@ jsonc-parser = { version = "=0.21.0", features = ["serde"] }
 lazy-regex.workspace = true
 libc.workspace = true
 log = { workspace = true, features = ["serde"] }
-lsp-types.workspace = true
+lsp-types = { workspace = true, optional = true }
 monch = "=0.4.1"
 notify.workspace = true
 once_cell.workspace = true
-os_pipe.workspace = true
+os_pipe = { workspace = true, optional = true }
 percent-encoding.workspace = true
 pin-project.workspace = true
 rand = { workspace = true, features = ["small_rng"] }
 regex.workspace = true
 ring.workspace = true
-rustyline = { version = "=10.0.0", default-features = false, features = ["custom-bindings"] }
-rustyline-derive = "=0.7.0"
+rustyline = { version = "=10.0.0", default-features = false, features = ["custom-bindings"], optional = true }
+rustyline-derive = { version = "=0.7.0", optional = true }
 serde.workspace = true
-serde_repr.workspace = true
-shell-escape = "=0.1.5"
+serde_repr = { workspace = true, optional = true }
+shell-escape = { version = "=0.1.5", optional = true }
 tar.workspace = true
-tempfile.workspace = true
-text-size = "=1.1.0"
+tempfile = { workspace = true, optional = true }
+text-size = { version = "=1.1.0", optional = true }
 text_lines = "=0.6.0"
 thiserror.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
-tower-lsp.workspace = true
+tower-lsp = { workspace = true, optional = true }
 twox-hash = "=1.6.3"
 typed-arena = "=2.0.1"
 uuid = { workspace = true, features = ["serde"] }
 walkdir = "=2.3.2"
-zstd.workspace = true
+zstd = { workspace = true, optional = true }
 
 [target.'cfg(windows)'.dependencies]
 fwdansi.workspace = true

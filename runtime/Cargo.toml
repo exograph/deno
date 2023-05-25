@@ -23,6 +23,7 @@ snapshot_from_snapshot = []
 include_js_files_for_snapshotting = [
   "deno_core/include_js_files_for_snapshotting",
 ]
+launch_without_snapshot = ["deno_ast"]
 
 [lib]
 name = "deno_runtime"
@@ -80,6 +81,8 @@ deno_web.workspace = true
 deno_webidl.workspace = true
 deno_websocket.workspace = true
 deno_webstorage.workspace = true
+
+deno_ast = { workspace = true, optional = true }
 
 atty.workspace = true
 console_static_text.workspace = true

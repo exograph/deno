@@ -30,8 +30,15 @@ use crate::module_loader::CliModuleLoader;
 use crate::node;
 use crate::ops;
 use crate::proc_state::ProcState;
+
+#[cfg(feature = "tools")]
 use crate::tools;
+#[cfg(feature = "tools")]
 use crate::tools::coverage::CoverageCollector;
+
+#[cfg(not(feature = "tools"))]
+type CoverageCollector = ();
+
 use crate::util::checksum;
 use crate::version;
 
@@ -86,6 +93,7 @@ impl CliMainWorker {
 
     self.worker.dispatch_unload_event(located_script_name!())?;
 
+    #[cfg(feature = "tools")]
     if let Some(coverage_collector) = maybe_coverage_collector.as_mut() {
       self
         .worker
@@ -220,16 +228,24 @@ impl CliMainWorker {
     &mut self,
   ) -> Result<Option<CoverageCollector>, AnyError> {
     if let Some(ref coverage_dir) = self.ps.options.coverage_dir() {
-      let session = self.worker.create_inspector_session().await;
+      #[cfg(feature = "tools")]
+      {
+        let session = self.worker.create_inspector_session().await;
 
-      let coverage_dir = PathBuf::from(coverage_dir);
-      let mut coverage_collector =
-        tools::coverage::CoverageCollector::new(coverage_dir, session);
-      self
-        .worker
-        .with_event_loop(coverage_collector.start_collecting().boxed_local())
-        .await?;
-      Ok(Some(coverage_collector))
+        let coverage_dir = PathBuf::from(coverage_dir);
+        let mut coverage_collector =
+          tools::coverage::CoverageCollector::new(coverage_dir, session);
+        self
+          .worker
+          .with_event_loop(coverage_collector.start_collecting().boxed_local())
+          .await?;
+        Ok(Some(coverage_collector))
+      }
+
+      #[cfg(not(feature = "tools"))]
+      {
+        panic!("Coverage is only available in with the tools feature")
+      }
     } else {
       Ok(None)
     }

@@ -34,6 +34,8 @@ pub use disk_cache::DiskCache;
 pub use emit::EmitCache;
 pub use http_cache::CachedUrlMetadata;
 pub use http_cache::HttpCache;
+
+#[cfg(feature = "tools")]
 pub use incremental::IncrementalCache;
 pub use node::NodeAnalysisCache;
 pub use parsed_source::ParsedSourceCache;
