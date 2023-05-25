@@ -22,6 +22,7 @@ use crate::cache::Caches;
 use crate::cache::FastInsecureHasher;
 use crate::cache::TypeCheckCache;
 use crate::npm::CliNpmResolver;
+#[cfg(feature = "tools")]
 use crate::tsc;
 use crate::version;
 
@@ -68,113 +69,110 @@ impl TypeChecker {
     graph: Arc<ModuleGraph>,
     options: CheckOptions,
   ) -> Result<(), AnyError> {
-    // node built-in specifiers use the @types/node package to determine
-    // types, so inject that now (the caller should do this after the lockfile
-    // has been written)
-    if graph.has_node_specifier {
-      self
-        .npm_resolver
-        .inject_synthetic_types_node_package()
-        .await?;
+    #[cfg(not(feature = "tools"))]
+    {
+      panic!("Type checking requires tools flag");
     }
-
-    log::debug!("Type checking.");
-    let ts_config_result = self
-      .cli_options
-      .resolve_ts_config_for_emit(TsConfigType::Check { lib: options.lib })?;
-    if options.log_ignored_options {
-      if let Some(ignored_options) = ts_config_result.maybe_ignored_options {
-        log::warn!("{}", ignored_options);
+    #[cfg(feature = "tools")]
+    {
+      // node built-in specifiers use the @types/node package to determine
+      // types, so inject that now (the caller should do this after the lockfile
+      // has been written)
+      if graph.has_node_specifier {
+        self
+          .npm_resolver
+          .inject_synthetic_types_node_package()
+          .await?;
       }
-    }
 
-    let ts_config = ts_config_result.ts_config;
-    let type_check_mode = self.cli_options.type_check_mode();
-    let debug = self.cli_options.log_level() == Some(log::Level::Debug);
-    let cache = TypeCheckCache::new(self.caches.type_checking_cache_db());
-    let check_js = ts_config.get_check_js();
-    let check_hash = match get_check_hash(&graph, type_check_mode, &ts_config) {
-      CheckHashResult::NoFiles => return Ok(()),
-      CheckHashResult::Hash(hash) => hash,
-    };
+      let ts_config = ts_config_result.ts_config;
+      let type_check_mode = self.cli_options.type_check_mode();
+      let debug = self.cli_options.log_level() == Some(log::Level::Debug);
+      let cache = TypeCheckCache::new(self.caches.type_checking_cache_db());
+      let check_js = ts_config.get_check_js();
+      let check_hash = match get_check_hash(&graph, type_check_mode, &ts_config) {
+        CheckHashResult::NoFiles => return Ok(()),
+        CheckHashResult::Hash(hash) => hash,
+      };
 
-    // do not type check if we know this is type checked
-    if !options.reload && cache.has_check_hash(check_hash) {
-      return Ok(());
-    }
+      // do not type check if we know this is type checked
+      if !options.reload && cache.has_check_hash(check_hash) {
+        return Ok(());
+      }
 
-    for root in &graph.roots {
-      let root_str = root.as_str();
-      log::info!("{} {}", colors::green("Check"), root_str);
-    }
+      for root in &graph.roots {
+        let root_str = root.as_str();
+        log::info!("{} {}", colors::green("Check"), root_str);
+      }
 
-    let root_names = get_tsc_roots(&graph, check_js);
-    // while there might be multiple roots, we can't "merge" the build info, so we
-    // try to retrieve the build info for first root, which is the most common use
-    // case.
-    let maybe_tsbuildinfo = if options.reload {
-      None
-    } else {
-      cache.get_tsbuildinfo(&graph.roots[0])
-    };
-    // to make tsc build info work, we need to consistently hash modules, so that
-    // tsc can better determine if an emit is still valid or not, so we provide
-    // that data here.
-    let hash_data = {
-      let mut hasher = FastInsecureHasher::new();
-      hasher.write(&ts_config.as_bytes());
-      hasher.write_str(version::deno());
-      hasher.finish()
-    };
+      let root_names = get_tsc_roots(&graph, check_js);
+      // while there might be multiple roots, we can't "merge" the build info, so we
+      // try to retrieve the build info for first root, which is the most common use
+      // case.
+      let maybe_tsbuildinfo = if options.reload {
+        None
+      } else {
+        cache.get_tsbuildinfo(&graph.roots[0])
+      };
+      // to make tsc build info work, we need to consistently hash modules, so that
+      // tsc can better determine if an emit is still valid or not, so we provide
+      // that data here.
+      let hash_data = {
+        let mut hasher = FastInsecureHasher::new();
+        hasher.write(&ts_config.as_bytes());
+        hasher.write_str(version::deno());
+        hasher.finish()
+      };
 
-    let response = tsc::exec(tsc::Request {
-      config: ts_config,
-      debug,
-      graph: graph.clone(),
-      hash_data,
-      maybe_node_resolver: Some(self.node_resolver.clone()),
-      maybe_tsbuildinfo,
-      root_names,
-      check_mode: type_check_mode,
-    })?;
+      let response = tsc::exec(tsc::Request {
+        config: ts_config,
+        debug,
+        graph: graph.clone(),
+        hash_data,
+        maybe_node_resolver: Some(self.node_resolver.clone()),
+        maybe_tsbuildinfo,
+        root_names,
+        check_mode: type_check_mode,
+      })?;
 
-    let diagnostics = if type_check_mode == TypeCheckMode::Local {
-      response.diagnostics.filter(|d| {
-        if let Some(file_name) = &d.file_name {
-          if !file_name.starts_with("http") {
-            if ModuleSpecifier::parse(file_name)
-              .map(|specifier| !self.node_resolver.in_npm_package(&specifier))
-              .unwrap_or(true)
-            {
-              Some(d.clone())
+      let diagnostics = if type_check_mode == TypeCheckMode::Local {
+        response.diagnostics.filter(|d| {
+          if let Some(file_name) = &d.file_name {
+            if !file_name.starts_with("http") {
+              if ModuleSpecifier::parse(file_name)
+                .map(|specifier| !self.node_resolver.in_npm_package(&specifier))
+                .unwrap_or(true)
+              {
+                Some(d.clone())
+              } else {
+                None
+              }
             } else {
               None
             }
           } else {
-            None
+            Some(d.clone())
           }
-        } else {
-          Some(d.clone())
-        }
-      })
-    } else {
-      response.diagnostics
-    };
+        })
+      } else {
+        response.diagnostics
+      };
 
-    if let Some(tsbuildinfo) = response.maybe_tsbuildinfo {
-      cache.set_tsbuildinfo(&graph.roots[0], &tsbuildinfo);
-    }
+      if let Some(tsbuildinfo) = response.maybe_tsbuildinfo {
+        cache.set_tsbuildinfo(&graph.roots[0], &tsbuildinfo);
+      }
 
-    if diagnostics.is_empty() {
-      cache.add_check_hash(check_hash);
-    }
+      if diagnostics.is_empty() {
+        cache.add_check_hash(check_hash);
+      }
 
-    log::debug!("{}", response.stats);
+      log::debug!("{}", response.stats);
 
-    if diagnostics.is_empty() {
-      Ok(())
-    } else {
-      Err(diagnostics.into())
+      if diagnostics.is_empty() {
+        Ok(())
+      } else {
+        Err(diagnostics.into())
+      }
     }
   }
 }

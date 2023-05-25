@@ -44,8 +44,15 @@ use crate::args::StorageKeyResolver;
 use crate::errors;
 use crate::npm::CliNpmResolver;
 use crate::ops;
+
+#[cfg(feature = "tools")]
 use crate::tools;
+#[cfg(feature = "tools")]
 use crate::tools::coverage::CoverageCollector;
+
+#[cfg(not(feature = "tools"))]
+type CoverageCollector = ();
+
 use crate::util::checksum;
 use crate::version;
 
@@ -166,6 +173,7 @@ impl CliMainWorker {
 
     self.worker.dispatch_unload_event(located_script_name!())?;
 
+    #[cfg(feature = "tools")]
     if let Some(coverage_collector) = maybe_coverage_collector.as_mut() {
       self
         .worker
@@ -284,16 +292,24 @@ impl CliMainWorker {
     &mut self,
   ) -> Result<Option<CoverageCollector>, AnyError> {
     if let Some(coverage_dir) = &self.shared.options.coverage_dir {
-      let session = self.worker.create_inspector_session().await;
+      #[cfg(feature = "tools")]
+      {
+        let session = self.worker.create_inspector_session().await;
 
-      let coverage_dir = PathBuf::from(coverage_dir);
-      let mut coverage_collector =
-        tools::coverage::CoverageCollector::new(coverage_dir, session);
-      self
-        .worker
-        .with_event_loop(coverage_collector.start_collecting().boxed_local())
-        .await?;
-      Ok(Some(coverage_collector))
+        let coverage_dir = PathBuf::from(coverage_dir);
+        let mut coverage_collector =
+          tools::coverage::CoverageCollector::new(coverage_dir, session);
+        self
+          .worker
+          .with_event_loop(coverage_collector.start_collecting().boxed_local())
+          .await?;
+        Ok(Some(coverage_collector))
+      }
+
+      #[cfg(not(feature = "tools"))]
+      {
+        panic!("Coverage is only available in with the tools feature")
+      }
     } else {
       Ok(None)
     }
@@ -448,7 +464,11 @@ impl CliMainWorkerFactory {
         inspect: shared.options.is_inspecting,
       },
       extensions,
+
+      #[cfg(feature = "tools")]
       startup_snapshot: Some(crate::js::deno_isolate_init()),
+      #[cfg(not(feature = "tools"))]
+      startup_snapshot: None,
       unsafely_ignore_certificate_errors: shared
         .options
         .unsafely_ignore_certificate_errors
@@ -576,7 +596,10 @@ fn create_web_worker_callback(
         inspect: shared.options.is_inspecting,
       },
       extensions,
+      #[cfg(feature = "tools")]
       startup_snapshot: Some(crate::js::deno_isolate_init()),
+      #[cfg(not(feature = "tools"))]
+      startup_snapshot: None,
       unsafely_ignore_certificate_errors: shared
         .options
         .unsafely_ignore_certificate_errors
