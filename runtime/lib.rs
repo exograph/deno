@@ -36,3 +36,6 @@ pub mod worker;
 
 mod worker_bootstrap;
 pub use worker_bootstrap::BootstrapOptions;
+
+#[cfg(feature = "launch_without_snapshot")]
+pub(crate) mod transpile_ts;

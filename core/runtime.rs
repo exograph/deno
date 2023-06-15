@@ -1651,11 +1651,20 @@ impl JsRuntime {
       .map(|handle| v8::Local::new(tc_scope, handle))
       .expect("ModuleInfo not found");
     let mut status = module.get_status();
-    assert_eq!(
-      status,
-      v8::ModuleStatus::Instantiated,
-      "Module not instantiated {id}"
-    );
+
+    if !(status == v8::ModuleStatus::Instantiated
+      || status == v8::ModuleStatus::Evaluated)
+    {
+      let handle = module_map_rc.borrow().get_handle(id).unwrap();
+
+      let name = module_map_rc
+        .borrow()
+        .get_info(&handle)
+        .unwrap()
+        .name
+        .clone();
+      panic!("Module not instantiated {id} ({name})")
+    }
 
     let (sender, receiver) = oneshot::channel();
 
