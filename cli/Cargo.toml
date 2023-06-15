@@ -27,7 +27,6 @@ tools = [
   "eszip",
   "fancy-regex",
   "lsp-types",
-  "mitata",
   "os_pipe",
   "rustyline",
   "rustyline-derive",

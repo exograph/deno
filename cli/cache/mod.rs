@@ -22,7 +22,6 @@ mod deno_dir;
 mod disk_cache;
 mod emit;
 mod http_cache;
-#[cfg(feature = "tools")]
 mod incremental;
 mod node;
 mod parsed_source;
