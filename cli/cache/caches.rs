@@ -9,13 +9,17 @@ use super::cache_db::CacheDB;
 use super::cache_db::CacheDBConfiguration;
 use super::check::TYPE_CHECK_CACHE_DB;
 use super::deno_dir::DenoDirProvider;
+
+#[cfg(feature = "tools")]
 use super::incremental::INCREMENTAL_CACHE_DB;
 use super::node::NODE_ANALYSIS_CACHE_DB;
 use super::parsed_source::PARSED_SOURCE_CACHE_DB;
 
 pub struct Caches {
   dir_provider: Arc<DenoDirProvider>,
+  #[cfg(feature = "tools")]
   fmt_incremental_cache_db: OnceCell<CacheDB>,
+  #[cfg(feature = "tools")]
   lint_incremental_cache_db: OnceCell<CacheDB>,
   dep_analysis_db: OnceCell<CacheDB>,
   node_analysis_db: OnceCell<CacheDB>,
@@ -26,7 +30,9 @@ impl Caches {
   pub fn new(dir: Arc<DenoDirProvider>) -> Self {
     Self {
       dir_provider: dir,
+      #[cfg(feature = "tools")]
       fmt_incremental_cache_db: Default::default(),
+      #[cfg(feature = "tools")]
       lint_incremental_cache_db: Default::default(),
       dep_analysis_db: Default::default(),
       node_analysis_db: Default::default(),
@@ -50,6 +56,7 @@ impl Caches {
       .clone()
   }
 
+  #[cfg(feature = "tools")]
   pub fn fmt_incremental_cache_db(&self) -> CacheDB {
     Self::make_db(
       &self.fmt_incremental_cache_db,
@@ -62,6 +69,7 @@ impl Caches {
     )
   }
 
+  #[cfg(feature = "tools")]
   pub fn lint_incremental_cache_db(&self) -> CacheDB {
     Self::make_db(
       &self.lint_incremental_cache_db,

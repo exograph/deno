@@ -129,6 +129,7 @@ mod ts {
     },
   );
 
+  #[cfg(feature = "tools")]
   pub fn create_compiler_snapshot(snapshot_path: PathBuf, cwd: &Path) {
     // libs that are being provided by op crates.
     let mut op_crate_libs = HashMap::new();
@@ -326,6 +327,7 @@ deno_core::extension!(
   }
 );
 
+#[cfg(feature = "tools")]
 #[must_use = "The files listed by create_cli_snapshot should be printed as 'cargo:rerun-if-changed' lines"]
 fn create_cli_snapshot(snapshot_path: PathBuf) -> CreateSnapshotOutput {
   // NOTE(bartlomieju): ordering is important here, keep it in sync with
@@ -408,13 +410,15 @@ fn main() {
     return;
   }
 
-  // Host snapshots won't work when cross compiling.
-  let target = env::var("TARGET").unwrap();
-  let host = env::var("HOST").unwrap();
-  if target != host {
-    panic!("Cross compiling with snapshot is not supported.");
+  #[cfg(feature = "tools")]
+  {
+    // Host snapshots won't work when cross compiling.
+    let target = env::var("TARGET").unwrap();
+    let host = env::var("HOST").unwrap();
+    if target != host {
+      panic!("Cross compiling with snapshot is not supported.");
+    }
   }
-
   let symbols_path = std::path::Path::new("napi").join(
     format!("generated_symbol_exports_list_{}.def", env::consts::OS).as_str(),
   )
@@ -475,16 +479,19 @@ fn main() {
   println!("cargo:rustc-env=TARGET={}", env::var("TARGET").unwrap());
   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
 
-  let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-  let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+  #[cfg(feature = "tools")]
+  {
+    let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
+    let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
-  let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
-  ts::create_compiler_snapshot(compiler_snapshot_path, &c);
+    let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
+    ts::create_compiler_snapshot(compiler_snapshot_path, &c);
 
-  let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
-  let output = create_cli_snapshot(cli_snapshot_path);
-  for path in output.files_loaded_during_snapshot {
-    println!("cargo:rerun-if-changed={}", path.display())
+    let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
+    let output = create_cli_snapshot(cli_snapshot_path);
+    for path in output.files_loaded_during_snapshot {
+      println!("cargo:rerun-if-changed={}", path.display())
+    }
   }
 
   #[cfg(target_os = "windows")]

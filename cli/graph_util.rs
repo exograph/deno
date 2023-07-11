@@ -10,7 +10,10 @@ use crate::errors::get_error_class_name;
 use crate::file_fetcher::FileFetcher;
 use crate::npm::CliNpmResolver;
 use crate::resolver::CliGraphResolver;
+
+#[cfg(feature = "tools")]
 use crate::tools::check;
+#[cfg(feature = "tools")]
 use crate::tools::check::TypeChecker;
 
 use deno_core::anyhow::bail;
@@ -174,6 +177,7 @@ pub struct ModuleGraphBuilder {
   maybe_file_watcher_reporter: Option<FileWatcherReporter>,
   emit_cache: cache::EmitCache,
   file_fetcher: Arc<FileFetcher>,
+  #[cfg(feature = "tools")]
   type_checker: Arc<TypeChecker>,
 }
 
@@ -188,7 +192,7 @@ impl ModuleGraphBuilder {
     maybe_file_watcher_reporter: Option<FileWatcherReporter>,
     emit_cache: cache::EmitCache,
     file_fetcher: Arc<FileFetcher>,
-    type_checker: Arc<TypeChecker>,
+    #[cfg(feature = "tools")] type_checker: Arc<TypeChecker>,
   ) -> Self {
     Self {
       options,
@@ -199,6 +203,7 @@ impl ModuleGraphBuilder {
       maybe_file_watcher_reporter,
       emit_cache,
       file_fetcher,
+      #[cfg(feature = "tools")]
       type_checker,
     }
   }
@@ -247,6 +252,7 @@ impl ModuleGraphBuilder {
     Ok(graph)
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_graph_and_maybe_check(
     &self,
     roots: Vec<ModuleSpecifier>,
@@ -286,6 +292,7 @@ impl ModuleGraphBuilder {
       graph_lock_or_exit(&graph, &mut lockfile.lock());
     }
 
+    #[cfg(feature = "tools")]
     if self.options.type_check_mode().is_true() {
       self
         .type_checker

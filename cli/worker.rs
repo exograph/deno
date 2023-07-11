@@ -44,7 +44,11 @@ use crate::args::StorageKeyResolver;
 use crate::errors;
 use crate::npm::CliNpmResolver;
 use crate::ops;
+
+#[cfg(feature = "tools")]
 use crate::tools;
+
+#[cfg(feature = "tools")]
 use crate::tools::coverage::CoverageCollector;
 use crate::util::checksum;
 use crate::version;
