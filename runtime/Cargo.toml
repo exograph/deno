@@ -24,6 +24,8 @@ include_js_files_for_snapshotting = [
   "deno_core/include_js_files_for_snapshotting",
 ]
 
+launch_without_snapshot = ["deno_ast"]
+
 [lib]
 name = "deno_runtime"
 path = "lib.rs"
@@ -64,6 +66,7 @@ winres.workspace = true
 winapi.workspace = true
 
 [dependencies]
+deno_ast = { workspace = true, optional = true }
 deno_broadcast_channel.workspace = true
 deno_cache.workspace = true
 deno_console.workspace = true

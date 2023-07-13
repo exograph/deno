@@ -44,6 +44,10 @@ use crate::ops;
 use crate::permissions::PermissionsContainer;
 use crate::BootstrapOptions;
 
+
+#[cfg(feature = "launch_without_snapshot")]
+use crate::transpile_ts::transpile_ts_for_snapshotting;
+
 pub type FormatJsErrorFn = dyn Fn(&JsError) -> String + Sync + Send;
 
 #[derive(Clone, Default)]

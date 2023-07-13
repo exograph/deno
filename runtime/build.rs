@@ -21,6 +21,8 @@ mod startup_snapshot {
   use deno_http::DefaultHttpPropertyExtractor;
   use std::path::Path;
 
+  // use transpile_ts::transpile_ts_for_snapshotting;
+
   fn transpile_ts_for_snapshotting(
     file_source: &ExtensionFileSource,
   ) -> Result<ModuleCode, AnyError> {
