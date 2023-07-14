@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use deno_core::ExtensionFileSource;
+use deno_core::ModuleCode;
 use deno_core::error::AnyError;
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
 

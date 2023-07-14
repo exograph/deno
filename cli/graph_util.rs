@@ -173,6 +173,7 @@ pub struct ModuleGraphBuilder {
   resolver: Arc<CliGraphResolver>,
   npm_resolver: Arc<CliNpmResolver>,
   parsed_source_cache: Arc<ParsedSourceCache>,
+  #[cfg(feature = "tools")]
   lockfile: Option<Arc<Mutex<Lockfile>>>,
   maybe_file_watcher_reporter: Option<FileWatcherReporter>,
   emit_cache: cache::EmitCache,
@@ -188,17 +189,20 @@ impl ModuleGraphBuilder {
     resolver: Arc<CliGraphResolver>,
     npm_resolver: Arc<CliNpmResolver>,
     parsed_source_cache: Arc<ParsedSourceCache>,
+    #[cfg(feature = "tools")]
     lockfile: Option<Arc<Mutex<Lockfile>>>,
     maybe_file_watcher_reporter: Option<FileWatcherReporter>,
     emit_cache: cache::EmitCache,
     file_fetcher: Arc<FileFetcher>,
-    #[cfg(feature = "tools")] type_checker: Arc<TypeChecker>,
+    #[cfg(feature = "tools")]
+    type_checker: Arc<TypeChecker>,
   ) -> Self {
     Self {
       options,
       resolver,
       npm_resolver,
       parsed_source_cache,
+      #[cfg(feature = "tools")]
       lockfile,
       maybe_file_watcher_reporter,
       emit_cache,
