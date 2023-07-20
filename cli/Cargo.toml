@@ -11,6 +11,10 @@ license.workspace = true
 repository.workspace = true
 description = "Provides the deno executable"
 
+[lib]
+name = "deno"
+path = "lib.rs"
+
 [[bin]]
 name = "deno"
 path = "main.rs"
@@ -41,14 +45,14 @@ winres.workspace = true
 
 [dependencies]
 deno_ast = { workspace = true, features = ["bundler", "cjs", "codegen", "dep_graph", "module_specifier", "proposal", "react", "sourcemap", "transforms", "typescript", "view", "visit"] }
-deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
+deno_core = { workspace = true }
 deno_doc = "0.62.0"
 deno_emit = "0.20.0"
 deno_graph = "=0.48.1"
 deno_lint = { version = "0.45.0", features = ["docs"] }
 deno_lockfile.workspace = true
 deno_npm.workspace = true
-deno_runtime = { workspace = true, features = ["dont_create_runtime_snapshot", "include_js_files_for_snapshotting"] }
+deno_runtime = { workspace = true }
 deno_semver.workspace = true
 deno_task_shell = "0.12.0"
 napi_sym.workspace = true
