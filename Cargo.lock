@@ -1880,12 +1880,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1925eb5ee48fffa504a9edce24b3b4d43e2809d1cc713a1df2b13a46e661b3c6"
 dependencies = [
  "base64 0.21.0",
- "cc",
  "hyper 0.14.26",
  "pin-project",
  "rand",
  "sha1",
- "simdutf8",
  "tokio",
  "utf-8",
 ]
@@ -4376,12 +4374,6 @@ dependencies = [
  "digest 0.10.6",
  "rand_core 0.6.4",
 ]
-
-[[package]]
-name = "simdutf8"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
 
 [[package]]
 name = "siphasher"
