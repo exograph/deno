@@ -8,7 +8,9 @@ pub mod factory;
 pub mod file_fetcher;
 pub mod graph_util;
 pub mod http_util;
+#[cfg(feature = "tools")]
 pub mod js;
+#[cfg(feature = "tools")]
 pub mod lsp;
 pub mod module_loader;
 pub mod napi;
@@ -16,8 +18,10 @@ pub mod node;
 pub mod npm;
 pub mod ops;
 pub mod resolver;
+#[cfg(feature = "tools")]
 pub mod standalone;
 pub mod tools;
+#[cfg(feature = "tools")]
 pub mod tsc;
 pub mod util;
 pub mod version;

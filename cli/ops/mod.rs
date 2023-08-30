@@ -7,8 +7,9 @@ use deno_core::error::AnyError;
 use deno_core::op;
 use deno_core::Extension;
 use deno_core::OpState;
-
+#[cfg(feature = "tools")]
 pub mod bench;
+#[cfg(feature = "tools")]
 pub mod testing;
 
 pub fn cli_exts(npm_resolver: Arc<CliNpmResolver>) -> Vec<Extension> {
@@ -20,7 +21,20 @@ pub fn cli_exts(npm_resolver: Arc<CliNpmResolver>) -> Vec<Extension> {
   ]
 }
 
+#[cfg(not(feature = "tools"))]
+deno_core::extension!(cli,
+  deps = [runtime],
+  ops = [op_npm_process_state],
+  options = {
+    npm_resolver: Arc<CliNpmResolver>,
+  },
+  state = |state, options| {
+    state.put(options.npm_resolver);
+  },
+);
+
 // ESM parts duplicated in `../build.rs`. Keep in sync!
+#[cfg(feature = "tools")]
 deno_core::extension!(cli,
   deps = [runtime],
   ops = [op_npm_process_state],
@@ -36,6 +50,7 @@ deno_core::extension!(cli,
   state = |state, options| {
     state.put(options.npm_resolver);
   },
+
   customizer = |ext: &mut deno_core::Extension| {
     ext.esm_files.to_mut().push(deno_core::ExtensionFileSource {
       specifier: "ext:cli/runtime/js/99_main.js",

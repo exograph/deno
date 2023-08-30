@@ -39,6 +39,7 @@ use crate::npm::NpmResolution;
 use crate::npm::PackageJsonDepsInstaller;
 use crate::resolver::CliGraphResolver;
 use crate::resolver::CliGraphResolverOptions;
+#[cfg(feature = "tools")]
 use crate::standalone::DenoCompileBinaryWriter;
 use crate::tools::check::TypeChecker;
 use crate::util::progress_bar::ProgressBar;
@@ -603,6 +604,7 @@ impl CliFactory {
     self.services.cjs_resolutions.get_or_init(Default::default)
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_compile_binary_writer(
     &self,
   ) -> Result<DenoCompileBinaryWriter, AnyError> {
