@@ -23,6 +23,7 @@ use crate::cache::Caches;
 use crate::cache::FastInsecureHasher;
 use crate::cache::TypeCheckCache;
 use crate::npm::CliNpmResolver;
+#[cfg(feature = "tools")]
 use crate::tsc;
 use crate::tsc::Diagnostics;
 use crate::version;
@@ -61,10 +62,20 @@ impl TypeChecker {
     }
   }
 
+  #[cfg(not(feature = "tools"))]
+  pub async fn check(
+    &self,
+    graph: Arc<ModuleGraph>,
+    options: CheckOptions,
+  ) -> Result<(), AnyError> {
+    panic!("Type checking requires 'tools' flag");
+  }
+
   /// Type check the module graph.
   ///
   /// It is expected that it is determined if a check and/or emit is validated
   /// before the function is called.
+  #[cfg(feature = "tools")]
   pub async fn check(
     &self,
     graph: Arc<ModuleGraph>,
