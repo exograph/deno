@@ -10,10 +10,15 @@ license.workspace = true
 repository.workspace = true
 description = "Provides the deno executable"
 
+[lib]
+name = "deno"
+path = "lib.rs"
+
 [[bin]]
 name = "deno"
 path = "main.rs"
 doc = false
+required-features = ["tools"]
 
 [[bin]]
 name = "denort"
@@ -41,6 +46,30 @@ default = ["upgrade", "__vendored_zlib_ng"]
 # available updates (of deno binary). This is typically disabled for (Linux)
 # distribution packages.
 upgrade = []
+tools = [
+  "deno_doc",
+  "deno_emit",
+  "deno_lint",
+  "deno_core/include_js_files_for_snapshotting",
+  "deno_runtime/include_js_files_for_snapshotting",
+  "deno_task_shell",
+  "dprint-plugin-json",
+  "dprint-plugin-markdown",
+  "dprint-plugin-typescript",
+  "eszip",
+  "fancy-regex",
+  "lsp-types",
+  "os_pipe",
+  "rustyline",
+  "rustyline-derive",
+  "serde_repr",
+  "sha2",
+  "shell-escape",
+  "tempfile",
+  "text-size",
+  "tower-lsp",
+  "zstd"
+]
 # A dev feature to disable creations and loading of snapshots in favor of
 # loading JS sources at runtime.
 __runtime_js_sources = ["deno_runtime/__runtime_js_sources"]
@@ -53,7 +82,7 @@ deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"]
 lazy-regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-zstd.workspace = true
+zstd = { workspace = true, optional = true }
 glibc_version = "0.1.2"
 flate2 = { workspace = true, features = ["default"] }
 
@@ -66,17 +95,17 @@ deno_ast = { workspace = true, features = ["bundler", "cjs", "codegen", "proposa
 deno_cache_dir = { workspace = true }
 deno_config = "=0.15.0"
 deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
-deno_doc = { version = "=0.119.0", features = ["html"] }
-deno_emit = "=0.38.2"
+deno_doc = { version = "=0.119.0", optional = true, features = ["html"] }
+deno_emit = { version = "=0.38.2", optional = true }
 deno_graph = { version = "=0.69.10", features = ["tokio_executor"] }
-deno_lint = { version = "=0.58.0", features = ["docs"] }
+deno_lint = { version = "=0.58.0", optional = true, features = ["docs"] }
 deno_lockfile.workspace = true
 deno_npm = "=0.17.0"
-deno_runtime = { workspace = true, features = ["include_js_files_for_snapshotting"] }
+deno_runtime = { workspace = true }
 deno_semver = "=0.5.4"
-deno_task_shell = "=0.16.0"
+deno_task_shell = { version = "=0.16.0", optional = true }
 deno_terminal.workspace = true
-eszip = "=0.64.2"
+eszip = { version = "=0.64.2", optional = true }
 napi_sym.workspace = true
 
 async-trait.workspace = true
@@ -95,12 +124,12 @@ dashmap = "5.5.3"
 data-encoding.workspace = true
 dissimilar = "=1.0.4"
 dotenvy = "0.15.7"
-dprint-plugin-json = "=0.19.2"
-dprint-plugin-jupyter = "=0.1.3"
-dprint-plugin-markdown = "=0.16.4"
-dprint-plugin-typescript = "=0.89.3"
+dprint-plugin-json = { version = "=0.19.2", optional = true }
+dprint-plugin-jupyter = { version = "=0.1.3", optional = true }
+dprint-plugin-markdown = { version = "=0.16.4", optional = true }
+dprint-plugin-typescript = { version = "=0.89.3", optional = true }
 env_logger = "=0.10.0"
-fancy-regex = "=0.10.0"
+fancy-regex = { version = "=0.10.0", optional = true }
 faster-hex.workspace = true
 # If you disable the default __vendored_zlib_ng feature above, you _must_ be able to link against `-lz`.
 flate2.workspace = true
@@ -114,12 +143,12 @@ lazy-regex.workspace = true
 libc.workspace = true
 libz-sys.workspace = true
 log = { workspace = true, features = ["serde"] }
-lsp-types.workspace = true
+lsp-types = { workspace = true, optional = true }
 monch.workspace = true
 notify.workspace = true
 once_cell.workspace = true
 open = "5.0.1"
-os_pipe.workspace = true
+os_pipe = { workspace = true, optional = true }
 p256.workspace = true
 percent-encoding.workspace = true
 phf.workspace = true
@@ -129,21 +158,21 @@ rand = { workspace = true, features = ["small_rng"] }
 regex.workspace = true
 reqwest.workspace = true
 ring.workspace = true
-rustyline.workspace = true
-rustyline-derive = "=0.7.0"
+rustyline = { workspace = true, optional = true }
+rustyline-derive = { version = "=0.7.0", optional = true }
 serde.workspace = true
-serde_repr.workspace = true
-sha2.workspace = true
-shell-escape = "=0.1.5"
+serde_repr = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+shell-escape = { version = "=0.1.5", optional = true }
 spki = { version = "0.7", features = ["pem"] }
 tar.workspace = true
-tempfile.workspace = true
-text-size = "=1.1.0"
+tempfile = { workspace = true, optional = true }
+text-size = { version = "=1.1.0", optional = true }
 text_lines = "=0.6.0"
 thiserror.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
-tower-lsp.workspace = true
+tower-lsp = { workspace = true, optional = true }
 twox-hash = "=1.6.3"
 typed-arena = "=2.0.1"
 unicode-width = "0.1"
