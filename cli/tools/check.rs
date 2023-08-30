@@ -26,7 +26,9 @@ use crate::cache::TypeCheckCache;
 use crate::graph_util::BuildFastCheckGraphOptions;
 use crate::graph_util::ModuleGraphBuilder;
 use crate::npm::CliNpmResolver;
+#[cfg(feature = "tools")]
 use crate::tsc;
+#[cfg(feature = "tools")]
 use crate::tsc::Diagnostics;
 use crate::util::path::to_percent_decoded_str;
 
@@ -74,10 +76,20 @@ impl TypeChecker {
     }
   }
 
+  #[cfg(not(feature = "tools"))]
+  pub async fn check(
+    &self,
+    graph: Arc<ModuleGraph>,
+    options: CheckOptions,
+  ) -> Result<(), AnyError> {
+    panic!("Type checking requires 'tools' flag");
+  }
+
   /// Type check the module graph.
   ///
   /// It is expected that it is determined if a check and/or emit is validated
   /// before the function is called.
+  #[cfg(feature = "tools")]
   pub async fn check(
     &self,
     graph: ModuleGraph,
@@ -95,6 +107,7 @@ impl TypeChecker {
   ///
   /// It is expected that it is determined if a check and/or emit is validated
   /// before the function is called.
+  #[cfg(feature = "tools")]
   pub async fn check_diagnostics(
     &self,
     mut graph: ModuleGraph,
@@ -229,6 +242,7 @@ impl TypeChecker {
     Ok((graph, diagnostics))
   }
 
+  #[cfg(feature = "tools")]
   fn is_remote_diagnostic(&self, d: &tsc::Diagnostic) -> bool {
     let Some(file_name) = &d.file_name else {
       return false;

@@ -13,11 +13,18 @@ mod ts {
   use deno_core::op2;
   use deno_core::OpState;
   use deno_runtime::deno_node::SUPPORTED_BUILTIN_NODE_MODULES;
+  use serde::Deserialize;
   use serde::Serialize;
   use std::collections::HashMap;
   use std::io::Write;
   use std::path::Path;
   use std::path::PathBuf;
+
+  #[derive(Debug, Deserialize)]
+  struct LoadArgs {
+    /// The fully qualified specifier that should be loaded.
+    specifier: String,
+  }
 
   #[derive(Debug, Serialize)]
   #[serde(rename_all = "camelCase")]
@@ -75,7 +82,7 @@ mod ts {
   // files, but a slightly different implementation at build time.
   fn op_load(
     state: &mut OpState,
-    #[string] load_specifier: &str,
+    #[serde] args: LoadArgs,
   ) -> Result<LoadResponse, AnyError> {
     let op_crate_libs = state.borrow::<HashMap<&str, PathBuf>>();
     let path_dts = state.borrow::<PathBuf>();
@@ -83,7 +90,7 @@ mod ts {
     let build_specifier = "asset:///bootstrap.ts";
 
     // we need a basic file to send to tsc to warm it up.
-    if load_specifier == build_specifier {
+    if args.specifier == build_specifier {
       Ok(LoadResponse {
         data: r#"Deno.writeTextFile("hello.txt", "hello deno!");"#.to_string(),
         version: "1".to_string(),
@@ -92,7 +99,7 @@ mod ts {
       })
       // specifiers come across as `asset:///lib.{lib_name}.d.ts` and we need to
       // parse out just the name so we can lookup the asset.
-    } else if let Some(caps) = re_asset.captures(load_specifier) {
+    } else if let Some(caps) = re_asset.captures(&args.specifier) {
       if let Some(lib) = caps.get(1).map(|m| m.as_str()) {
         // if it comes from an op crate, we were supplied with the path to the
         // file.
@@ -112,13 +119,13 @@ mod ts {
       } else {
         Err(custom_error(
           "InvalidSpecifier",
-          format!("An invalid specifier was requested: {}", load_specifier),
+          format!("An invalid specifier was requested: {}", args.specifier),
         ))
       }
     } else {
       Err(custom_error(
         "InvalidSpecifier",
-        format!("An invalid specifier was requested: {}", load_specifier),
+        format!("An invalid specifier was requested: {}", args.specifier),
       ))
     }
   }
@@ -142,6 +149,7 @@ mod ts {
     },
   );
 
+  #[cfg(feature = "tools")]
   pub fn create_compiler_snapshot(snapshot_path: PathBuf, cwd: &Path) {
     // libs that are being provided by op crates.
     let mut op_crate_libs = HashMap::new();
@@ -322,6 +330,7 @@ mod ts {
   }
 }
 
+#[cfg(feature = "tools")]
 #[cfg(not(feature = "__runtime_js_sources"))]
 fn create_cli_snapshot(snapshot_path: PathBuf) {
   use deno_runtime::ops::bootstrap::SnapshotOptions;
@@ -379,12 +388,15 @@ fn main() {
   }
 
   // Host snapshots won't work when cross compiling.
-  let target = env::var("TARGET").unwrap();
-  let host = env::var("HOST").unwrap();
-  let skip_cross_check =
-    env::var("DENO_SKIP_CROSS_BUILD_CHECK").map_or(false, |v| v == "1");
-  if !skip_cross_check && target != host {
-    panic!("Cross compiling with snapshot is not supported.");
+  #[cfg(feature = "tools")]
+  {
+    let target = env::var("TARGET").unwrap();
+    let host = env::var("HOST").unwrap();
+    let skip_cross_check =
+      env::var("DENO_SKIP_CROSS_BUILD_CHECK").map_or(false, |v| v == "1");
+    if !skip_cross_check && target != host {
+      panic!("Cross compiling with snapshot is not supported.");
+    }
   }
 
   let symbols_file_name = match env::consts::OS {
@@ -460,16 +472,19 @@ fn main() {
   println!("cargo:rustc-env=TARGET={}", env::var("TARGET").unwrap());
   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
 
-  let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-  let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-
-  let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
-  ts::create_compiler_snapshot(compiler_snapshot_path, &c);
-
-  #[cfg(not(feature = "__runtime_js_sources"))]
+  #[cfg(feature = "tools")]
   {
-    let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
-    create_cli_snapshot(cli_snapshot_path);
+    let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
+    let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+
+    let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
+    ts::create_compiler_snapshot(compiler_snapshot_path, &c);
+
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    {
+      let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
+      create_cli_snapshot(cli_snapshot_path);
+    }
   }
 
   #[cfg(target_os = "windows")]

@@ -52,6 +52,8 @@ use crate::args::DenoSubcommand;
 use crate::args::StorageKeyResolver;
 use crate::errors;
 use crate::npm::CliNpmResolver;
+#[cfg(feature = "tools")]
+use crate::tools;
 use crate::util::checksum;
 use crate::util::file_watcher::WatcherCommunicator;
 use crate::util::file_watcher::WatcherRestartMode;
@@ -172,8 +174,10 @@ impl CliMainWorker {
   }
 
   pub async fn run(&mut self) -> Result<i32, AnyError> {
+    #[cfg(feature = "tools")]
     let mut maybe_coverage_collector =
       self.maybe_setup_coverage_collector().await?;
+    #[cfg(feature = "tools")]
     let mut maybe_hmr_runner = self.maybe_setup_hmr_runner().await?;
 
     log::debug!("main_module {}", self.main_module);
@@ -192,6 +196,7 @@ impl CliMainWorker {
     self.worker.dispatch_load_event()?;
 
     loop {
+      #[cfg(feature = "tools")]
       if let Some(hmr_runner) = maybe_hmr_runner.as_mut() {
         let watcher_communicator =
           self.shared.maybe_file_watcher_communicator.clone().unwrap();
@@ -220,6 +225,9 @@ impl CliMainWorker {
           .await?;
       }
 
+      #[cfg(not(feature = "tools"))]
+      self.worker.run_event_loop(false).await?;
+
       let web_continue = self.worker.dispatch_beforeunload_event()?;
       if !web_continue {
         let node_continue = self.worker.dispatch_process_beforeexit_event()?;
@@ -232,6 +240,7 @@ impl CliMainWorker {
     self.worker.dispatch_unload_event()?;
     self.worker.dispatch_process_exit_event()?;
 
+    #[cfg(feature = "tools")]
     if let Some(coverage_collector) = maybe_coverage_collector.as_mut() {
       self
         .worker
@@ -242,6 +251,7 @@ impl CliMainWorker {
         )
         .await?;
     }
+    #[cfg(feature = "tools")]
     if let Some(hmr_runner) = maybe_hmr_runner.as_mut() {
       self
         .worker
@@ -338,6 +348,7 @@ impl CliMainWorker {
     self.worker.evaluate_module(id).await
   }
 
+  #[cfg(feature = "tools")]
   pub async fn maybe_setup_hmr_runner(
     &mut self,
   ) -> Result<Option<Box<dyn HmrRunner>>, AnyError> {
@@ -364,6 +375,7 @@ impl CliMainWorker {
     Ok(Some(hmr_runner))
   }
 
+  #[cfg(feature = "tools")]
   pub async fn maybe_setup_coverage_collector(
     &mut self,
   ) -> Result<Option<Box<dyn CoverageCollector>>, AnyError> {
@@ -615,7 +627,11 @@ impl CliMainWorkerFactory {
         serve_host: shared.serve_host.clone(),
       },
       extensions: custom_extensions,
+
+      #[cfg(feature = "tools")]
       startup_snapshot: crate::js::deno_isolate_init(),
+      #[cfg(not(feature = "tools"))]
+      startup_snapshot: None,
       create_params: None,
       unsafely_ignore_certificate_errors: shared
         .options
@@ -822,7 +838,10 @@ fn create_web_worker_callback(
         serve_host: shared.serve_host.clone(),
       },
       extensions: vec![],
+      #[cfg(feature = "tools")]
       startup_snapshot: crate::js::deno_isolate_init(),
+      #[cfg(not(feature = "tools"))]
+      startup_snapshot: None,
       unsafely_ignore_certificate_errors: shared
         .options
         .unsafely_ignore_certificate_errors
