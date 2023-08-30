@@ -16,6 +16,8 @@ pub mod http_util;
 #[cfg(feature = "tools")]
 pub mod js;
 #[cfg(feature = "tools")]
+pub mod jsr;
+#[cfg(feature = "tools")]
 pub mod lsp;
 pub mod module_loader;
 pub mod napi;
@@ -64,8 +66,12 @@ pub(crate) fn unstable_exit_cb(feature: &str, api_name: &str) {
 }
 
 #[allow(dead_code)]
-pub(crate) fn unstable_warn_cb(feature: &str) {
+pub(crate) fn unstable_warn_cb(feature: &str, api_name: &str) {
   eprintln!(
-    "The `--unstable` flag is deprecated, use --unstable-{feature} instead."
+    "⚠️  {}",
+    colors::yellow(format!(
+      "The `{}` API was used with `--unstable` flag. The `--unstable` flag is deprecated and will be removed in Deno 2.0. Use granular `--unstable-{}` instead.\nLearn more at: https://docs.deno.com/runtime/manual/tools/unstable_flags",
+      api_name, feature
+    ))
   );
 }

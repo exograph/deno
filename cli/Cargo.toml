@@ -25,6 +25,7 @@ required-features = ["tools"]
 name = "denort"
 path = "mainrt.rs"
 doc = false
+required-features = ["tools"]
 
 [[test]]
 name = "integration"
@@ -49,7 +50,6 @@ default = ["upgrade", "__vendored_zlib_ng"]
 upgrade = []
 tools = [
   "deno_doc",
-  "deno_emit",
   "deno_lint",
   "deno_core/include_js_files_for_snapshotting",
   "deno_runtime/include_js_files_for_snapshotting",
@@ -57,6 +57,7 @@ tools = [
   "dprint-plugin-json",
   "dprint-plugin-markdown",
   "dprint-plugin-typescript",
+  "dprint-plugin-jupyter",
   "eszip",
   "fancy-regex",
   "lsp-types",
@@ -96,7 +97,7 @@ deno_cache_dir = { workspace = true }
 deno_config = "=0.16.4"
 deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
 deno_doc = { version = "=0.139.0", optional = true, features = ["html", "syntect"] }
-deno_emit = { version = "=0.42.0", optional = true }
+deno_emit = "=0.42.0"
 deno_graph = { version = "=0.78.1", features = ["tokio_executor"] }
 deno_lint = { version = "=0.60.0", optional = true, features = ["docs"] }
 deno_lockfile.workspace = true

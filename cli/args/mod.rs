@@ -1442,6 +1442,7 @@ impl CliOptions {
     LintOptions::resolve(maybe_lint_config, Some(lint_flags), &self.initial_cwd)
   }
 
+  #[cfg(feature = "tools")]
   pub fn resolve_lint_config(
     &self,
   ) -> Result<deno_lint::linter::LintConfig, AnyError> {

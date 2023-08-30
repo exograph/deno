@@ -736,6 +736,7 @@ impl CliFactory {
       .await
   }
 
+  #[cfg(feature = "tools")]
   pub fn feature_checker(&self) -> &Arc<FeatureChecker> {
     self.services.feature_checker.get_or_init(|| {
       let mut checker = FeatureChecker::default();
@@ -770,6 +771,7 @@ impl CliFactory {
     ))
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_cli_main_worker_factory(
     &self,
   ) -> Result<CliMainWorkerFactory, AnyError> {
@@ -832,6 +834,7 @@ impl CliFactory {
     ))
   }
 
+  #[cfg(feature = "tools")]
   fn create_cli_main_worker_options(
     &self,
   ) -> Result<CliMainWorkerOptions, AnyError> {

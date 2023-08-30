@@ -81,7 +81,7 @@ impl TypeChecker {
     &self,
     graph: Arc<ModuleGraph>,
     options: CheckOptions,
-  ) -> Result<(), AnyError> {
+  ) -> Result<Arc<ModuleGraph>, AnyError> {
     panic!("Type checking requires 'tools' flag");
   }
 
