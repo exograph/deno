@@ -2,8 +2,11 @@
 
 use deno_core::Extension;
 
+#[cfg(feature = "tools")]
 pub mod bench;
+#[cfg(feature = "tools")]
 pub mod jupyter;
+#[cfg(feature = "tools")]
 pub mod testing;
 
 pub fn cli_exts() -> Vec<Extension> {
@@ -15,7 +18,13 @@ pub fn cli_exts() -> Vec<Extension> {
   ]
 }
 
+#[cfg(not(feature = "tools"))]
+deno_core::extension!(cli,
+  deps = [runtime],
+);
+
 // ESM parts duplicated in `../build.rs`. Keep in sync!
+#[cfg(feature = "tools")]
 deno_core::extension!(cli,
   deps = [runtime],
   esm_entry_point = "ext:cli/99_main.js",
