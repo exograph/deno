@@ -41,6 +41,7 @@ use crate::resolver::CliGraphResolverOptions;
 use crate::resolver::CliNodeResolver;
 use crate::resolver::NpmModuleLoader;
 use crate::resolver::SloppyImportsResolver;
+#[cfg(feature = "tools")]
 use crate::standalone::DenoCompileBinaryWriter;
 use crate::tools::check::TypeChecker;
 use crate::tools::coverage::CoverageCollector;
@@ -742,6 +743,7 @@ impl CliFactory {
     })
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_compile_binary_writer(
     &self,
   ) -> Result<DenoCompileBinaryWriter, AnyError> {
