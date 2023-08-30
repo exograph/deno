@@ -213,6 +213,11 @@ impl<'a> SpecifierUnfurler<'a> {
             &mut text_changes,
           );
         }
+        #[cfg(not(feature = "tools"))]
+        DependencyDescriptor::Dynamic(dep) => {
+          panic!("Dynamic import not supported")
+        }
+        #[cfg(feature = "tools")]
         DependencyDescriptor::Dynamic(dep) => {
           let success = self.try_unfurl_dynamic_dep(
             url,
@@ -293,6 +298,76 @@ fn relative_url(
     resolved.to_string()
   }
 }
+
+/// Attempts to unfurl the dynamic dependency returning `true` on success
+/// or `false` when the import was not analyzable.
+#[cfg(feature = "tools")]
+fn try_unfurl_dynamic_dep(
+  import_map: &ImportMap,
+  module_url: &lsp_types::Url,
+  parsed_source: &ParsedSource,
+  dep: &deno_graph::DynamicDependencyDescriptor,
+  text_changes: &mut Vec<deno_ast::TextChange>,
+) -> bool {
+  match &dep.argument {
+    deno_graph::DynamicArgument::String(value) => {
+      let range = to_range(parsed_source, &dep.argument_range);
+      let maybe_relative_index =
+        parsed_source.text_info().text_str()[range.start..].find(value);
+      let Some(relative_index) = maybe_relative_index else {
+        return false;
+      };
+      let resolved = import_map.resolve(value, module_url);
+      let Ok(resolved) = resolved else {
+        return false;
+      };
+      let start = range.start + relative_index;
+      text_changes.push(deno_ast::TextChange {
+        range: start..start + value.len(),
+        new_text: make_relative_to(module_url, &resolved),
+      });
+      true
+    }
+    deno_graph::DynamicArgument::Template(parts) => match parts.first() {
+      Some(DynamicTemplatePart::String { value }) => {
+        // relative doesn't need to be modified
+        let is_relative = value.starts_with("./") || value.starts_with("../");
+        if is_relative {
+          return true;
+        }
+        if !value.ends_with('/') {
+          return false;
+        }
+        let Ok(resolved) = import_map.resolve(value, module_url) else {
+          return false;
+        };
+        let range = to_range(parsed_source, &dep.argument_range);
+        let maybe_relative_index =
+          parsed_source.text_info().text_str()[range.start..].find(value);
+        let Some(relative_index) = maybe_relative_index else {
+          return false;
+        };
+        let start = range.start + relative_index;
+        text_changes.push(deno_ast::TextChange {
+          range: start..start + value.len(),
+          new_text: make_relative_to(module_url, &resolved),
+        });
+        true
+      }
+      Some(DynamicTemplatePart::Expr) => {
+        false // failed analyzing
+      }
+      None => {
+        true // ignore
+      }
+    },
+    deno_graph::DynamicArgument::Expr => {
+      false // failed analyzing
+    }
+    to.to_string()
+  }
+}
+
 
 fn to_range(
   parsed_source: &ParsedSource,
