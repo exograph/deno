@@ -344,7 +344,7 @@ impl ModuleGraphCreator {
     self
       .type_checker
       .check(
-        graph,
+        graph.into(),
         check::CheckOptions {
           build_fast_check_graph: true,
           lib: self.options.ts_type_lib_window(),

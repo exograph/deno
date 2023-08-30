@@ -142,6 +142,7 @@ mod ts {
     },
   );
 
+  #[cfg(feature = "tools")]
   pub fn create_compiler_snapshot(snapshot_path: PathBuf, cwd: &Path) {
     // libs that are being provided by op crates.
     let mut op_crate_libs = HashMap::new();
@@ -322,6 +323,7 @@ mod ts {
   }
 }
 
+#[cfg(feature = "tools")]
 #[cfg(not(feature = "__runtime_js_sources"))]
 fn create_cli_snapshot(snapshot_path: PathBuf) {
   use deno_runtime::ops::bootstrap::SnapshotOptions;
@@ -378,12 +380,15 @@ fn main() {
   }
 
   // Host snapshots won't work when cross compiling.
-  let target = env::var("TARGET").unwrap();
-  let host = env::var("HOST").unwrap();
-  let skip_cross_check =
-    env::var("DENO_SKIP_CROSS_BUILD_CHECK").map_or(false, |v| v == "1");
-  if !skip_cross_check && target != host {
-    panic!("Cross compiling with snapshot is not supported.");
+  #[cfg(feature = "tools")]
+  {
+    let target = env::var("TARGET").unwrap();
+    let host = env::var("HOST").unwrap();
+    let skip_cross_check =
+      env::var("DENO_SKIP_CROSS_BUILD_CHECK").map_or(false, |v| v == "1");
+    if !skip_cross_check && target != host {
+      panic!("Cross compiling with snapshot is not supported.");
+    }
   }
 
   let symbols_file_name = match env::consts::OS {
@@ -459,16 +464,19 @@ fn main() {
   println!("cargo:rustc-env=TARGET={}", env::var("TARGET").unwrap());
   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
 
-  let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-  let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-
-  let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
-  ts::create_compiler_snapshot(compiler_snapshot_path, &c);
-
-  #[cfg(not(feature = "__runtime_js_sources"))]
+  #[cfg(feature = "tools")]
   {
-    let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
-    create_cli_snapshot(cli_snapshot_path);
+    let c = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
+    let o = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+
+    let compiler_snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
+    ts::create_compiler_snapshot(compiler_snapshot_path, &c);
+
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    {
+      let cli_snapshot_path = o.join("CLI_SNAPSHOT.bin");
+      create_cli_snapshot(cli_snapshot_path);
+    }
   }
 
   #[cfg(target_os = "windows")]

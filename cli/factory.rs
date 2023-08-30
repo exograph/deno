@@ -43,9 +43,12 @@ use crate::resolver::CliGraphResolverOptions;
 use crate::resolver::CliNodeResolver;
 use crate::resolver::NpmModuleLoader;
 use crate::resolver::SloppyImportsResolver;
+#[cfg(feature = "tools")]
 use crate::standalone::DenoCompileBinaryWriter;
 use crate::tools::check::TypeChecker;
+#[cfg(feature = "tools")]
 use crate::tools::coverage::CoverageCollector;
+#[cfg(feature = "tools")]
 use crate::tools::run::hmr::HmrRunner;
 use crate::util::file_watcher::WatcherCommunicator;
 use crate::util::fs::canonicalize_path_maybe_not_exists;
@@ -736,6 +739,7 @@ impl CliFactory {
       .await
   }
 
+  #[cfg(feature = "tools")]
   pub fn feature_checker(&self) -> &Arc<FeatureChecker> {
     self.services.feature_checker.get_or_init(|| {
       let mut checker = FeatureChecker::default();
@@ -756,6 +760,7 @@ impl CliFactory {
     })
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_compile_binary_writer(
     &self,
   ) -> Result<DenoCompileBinaryWriter, AnyError> {
@@ -769,6 +774,7 @@ impl CliFactory {
     ))
   }
 
+  #[cfg(feature = "tools")]
   pub async fn create_cli_main_worker_factory(
     &self,
   ) -> Result<CliMainWorkerFactory, AnyError> {
@@ -832,6 +838,7 @@ impl CliFactory {
     ))
   }
 
+  #[cfg(feature = "tools")]
   fn create_cli_main_worker_options(
     &self,
   ) -> Result<CliMainWorkerOptions, AnyError> {
