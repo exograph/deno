@@ -9,6 +9,7 @@ use deno_ast::ModuleSpecifier;
 use deno_core::anyhow::bail;
 use deno_core::anyhow::Context;
 use deno_core::error::AnyError;
+#[cfg(feature = "tools")]
 use deno_core::futures::FutureExt;
 use deno_core::located_script_name;
 use deno_core::parking_lot::Mutex;
