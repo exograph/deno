@@ -1,4 +1,5 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
+#![allow(unused)]
 
 use std::env;
 use std::path::PathBuf;
@@ -123,6 +124,7 @@ mod ts {
     },
   );
 
+  #[cfg(feature = "tools")]
   pub fn create_compiler_snapshot(snapshot_path: PathBuf, cwd: &Path) {
     // libs that are being provided by op crates.
     let mut op_crate_libs = HashMap::new();
@@ -306,7 +308,7 @@ deno_core::extension!(
   }
 );
 
-#[cfg(not(feature = "__runtime_js_sources"))]
+#[cfg(all(feature = "tools", not(feature = "__runtime_js_sources")))]
 #[must_use = "The files listed by create_cli_snapshot should be printed as 'cargo:rerun-if-changed' lines"]
 fn create_cli_snapshot(snapshot_path: PathBuf) -> CreateSnapshotOutput {
   use deno_core::Extension;
