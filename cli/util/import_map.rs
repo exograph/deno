@@ -85,6 +85,11 @@ impl<'a> ImportMapUnfurler<'a> {
             &mut text_changes,
           );
         }
+        #[cfg(not(feature = "tools"))]
+        DependencyDescriptor::Dynamic(dep) => {
+          panic!("Dynamic import not supported")
+        }
+        #[cfg(feature = "tools")]
         DependencyDescriptor::Dynamic(dep) => {
           let success = try_unfurl_dynamic_dep(
             self.import_map,
@@ -165,6 +170,7 @@ fn make_relative_to(from: &ModuleSpecifier, to: &ModuleSpecifier) -> String {
 
 /// Attempts to unfurl the dynamic dependency returning `true` on success
 /// or `false` when the import was not analyzable.
+#[cfg(feature = "tools")]
 fn try_unfurl_dynamic_dep(
   import_map: &ImportMap,
   module_url: &lsp_types::Url,

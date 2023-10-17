@@ -1,0 +1,21 @@
+[package]
+name = "deno_virtual_fs"
+version = "1.39.4"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Provides the virtual FS APIs for NPM modules"
+
+[dependencies]
+async-trait.workspace = true
+deno_core = { workspace = true }
+deno_runtime = { workspace = true }
+log.workspace = true
+ring.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+test_util.workspace = true

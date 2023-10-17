@@ -25,6 +25,7 @@ use crate::cache::TypeCheckCache;
 use crate::npm::CliNpmResolver;
 #[cfg(feature = "tools")]
 use crate::tsc;
+#[cfg(feature = "tools")]
 use crate::tsc::Diagnostics;
 use crate::version;
 
@@ -93,6 +94,7 @@ impl TypeChecker {
   ///
   /// It is expected that it is determined if a check and/or emit is validated
   /// before the function is called.
+  #[cfg(feature = "tools")]
   pub async fn check_diagnostics(
     &self,
     graph: Arc<ModuleGraph>,
