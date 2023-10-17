@@ -56,8 +56,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 pub mod binary;
-mod file_system;
-mod virtual_fs;
+pub use deno_virtual_fs::file_system;
+pub use deno_virtual_fs::virtual_fs;
 
 pub use binary::extract_standalone;
 pub use binary::is_standalone_binary;

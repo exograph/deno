@@ -32,6 +32,7 @@ members = [
   "tests/ffi",
   "tests/napi",
   "tests/util/server",
+  "virtual_fs",
 ]
 exclude = ["tests/util/std/hash/_wasm"]
 
@@ -51,7 +52,9 @@ deno_media_type = { version = "0.1.1", features = ["module_specifier"] }
 deno_runtime = { version = "0.148.0", path = "./runtime" }
 deno_terminal = "0.1.1"
 napi_sym = { version = "0.70.0", path = "./cli/napi/sym" }
-test_util = { package = "test_server", path = "./tests/util/server" }
+test_util = { path = "./test_server" }
+
+deno_virtual_fs = { version = "1.38.2", path = "./virtual_fs" }
 
 denokv_proto = "0.5.0"
 denokv_remote = "0.5.0"
