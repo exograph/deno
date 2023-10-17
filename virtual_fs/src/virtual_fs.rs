@@ -27,8 +27,53 @@ use serde::Deserialize;
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::util;
-use crate::util::fs::canonicalize_path;
+// From util/fs.rs
+mod fs {
+  use std::path::Path;
+  use std::path::PathBuf;
+
+  /// Similar to `std::fs::canonicalize()` but strips UNC prefixes on Windows.
+  pub fn canonicalize_path(path: &Path) -> Result<PathBuf, std::io::Error> {
+    Ok(deno_core::strip_unc_prefix(path.canonicalize()?))
+  }
+
+  #[cfg(test)]
+  pub fn symlink_dir(oldpath: &Path, newpath: &Path) -> Result<(), std::io::Error> {
+    #[cfg(unix)]
+    {
+      use std::os::unix::fs::symlink;
+      symlink(oldpath, newpath)?;
+    }
+    #[cfg(not(unix))]
+    {
+      use std::os::windows::fs::symlink_dir;
+      symlink_dir(oldpath, newpath)?;
+    }
+    Ok(())
+  }
+}
+
+use fs::canonicalize_path;
+
+// From util/checksum.rs
+mod checksum {
+  use ring::digest::Context;
+  use ring::digest::SHA256;
+
+  pub fn gen(v: &[impl AsRef<[u8]>]) -> String {
+    let mut ctx = Context::new(&SHA256);
+    for src in v {
+      ctx.update(src.as_ref());
+    }
+    let digest = ctx.finish();
+    let out: Vec<String> = digest
+      .as_ref()
+      .iter()
+      .map(|byte| format!("{byte:02x}"))
+      .collect();
+    out.join("")
+  }
+}
 
 #[derive(Error, Debug)]
 #[error(
@@ -94,7 +139,7 @@ impl VfsBuilder {
       } else if file_type.is_file() {
         self.add_file_at_path(&path)?;
       } else if file_type.is_symlink() {
-        match util::fs::canonicalize_path(&path) {
+        match canonicalize_path(&path) {
           Ok(target) => {
             if let Err(StripRootError { .. }) = self.add_symlink(&path, &target)
             {
@@ -102,7 +147,7 @@ impl VfsBuilder {
                 // this may change behavior, so warn the user about it
                 log::warn!(
                   "{} Symlink target is outside '{}'. Inlining symlink at '{}' to '{}' as file.",
-                  crate::colors::yellow("Warning"),
+                  deno_runtime::colors::yellow("Warning"),
                   self.root_path.display(),
                   path.display(),
                   target.display(),
@@ -114,7 +159,7 @@ impl VfsBuilder {
               } else {
                 log::warn!(
                   "{} Symlink target is outside '{}'. Excluding symlink at '{}' with target '{}'.",
-                  crate::colors::yellow("Warning"),
+                  deno_runtime::colors::yellow("Warning"),
                   self.root_path.display(),
                   path.display(),
                   target.display(),
@@ -125,7 +170,7 @@ impl VfsBuilder {
           Err(err) => {
             log::warn!(
               "{} Failed resolving symlink. Ignoring.\n    Path: {}\n    Message: {:#}",
-              crate::colors::yellow("Warning"),
+              deno_runtime::colors::yellow("Warning"),
               path.display(),
               err
             );
@@ -182,7 +227,7 @@ impl VfsBuilder {
 
   fn add_file(&mut self, path: &Path, data: Vec<u8>) -> Result<(), AnyError> {
     log::debug!("Adding file '{}'", path.display());
-    let checksum = util::checksum::gen(&[&data]);
+    let checksum = checksum::gen(&[&data]);
     let offset = if let Some(offset) = self.file_offsets.get(&checksum) {
       // duplicate file, reuse an old offset
       *offset
@@ -939,7 +984,7 @@ mod test {
     temp_dir.create_dir_all("src/nested/sub_dir");
     temp_dir.write("src/a.txt", "data");
     temp_dir.write("src/b.txt", "data");
-    util::fs::symlink_dir(
+    fs::symlink_dir(
       temp_dir_path.join("src/nested/sub_dir").as_path(),
       temp_dir_path.join("src/sub_dir_link").as_path(),
     )

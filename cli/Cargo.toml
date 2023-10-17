@@ -95,6 +95,7 @@ deno_npm = "=0.16.0"
 deno_runtime = { workspace = true }
 deno_semver = "=0.5.4"
 deno_task_shell = { version = "=0.14.3", optional = true }
+deno_virtual_fs.workspace = true
 eszip = { version = "=0.60.0", optional = true }
 napi_sym.workspace = true
 
