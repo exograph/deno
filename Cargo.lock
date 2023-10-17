@@ -811,6 +811,7 @@ dependencies = [
  "deno_runtime",
  "deno_semver",
  "deno_task_shell",
+ "deno_virtual_fs",
  "dissimilar",
  "dprint-plugin-json",
  "dprint-plugin-markdown",
@@ -1531,6 +1532,21 @@ dependencies = [
  "deno_webidl",
  "serde",
  "urlpattern",
+]
+
+[[package]]
+name = "deno_virtual_fs"
+version = "1.36.3"
+dependencies = [
+ "async-trait",
+ "deno_core",
+ "deno_runtime",
+ "log",
+ "ring",
+ "serde",
+ "test_util",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
