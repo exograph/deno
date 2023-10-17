@@ -33,6 +33,7 @@ members = [
   "tests/ffi",
   "tests/napi",
   "tests/util/server",
+  "virtual_fs",
 ]
 exclude = ["tests/util/std/hash/_wasm"]
 
@@ -54,6 +55,8 @@ deno_runtime = { version = "0.150.0", path = "./runtime" }
 deno_terminal = "0.1.1"
 napi_sym = { version = "0.72.0", path = "./cli/napi/sym" }
 test_util = { package = "test_server", path = "./tests/util/server" }
+
+deno_virtual_fs = { version = "1.38.2", path = "./virtual_fs" }
 
 denokv_proto = "0.5.0"
 denokv_remote = "0.5.0"
