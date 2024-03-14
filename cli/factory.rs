@@ -45,7 +45,9 @@ use crate::resolver::SloppyImportsResolver;
 #[cfg(feature = "tools")]
 use crate::standalone::DenoCompileBinaryWriter;
 use crate::tools::check::TypeChecker;
+#[cfg(feature = "tools")]
 use crate::tools::coverage::CoverageCollector;
+#[cfg(feature = "tools")]
 use crate::tools::run::hmr::HmrRunner;
 use crate::util::file_watcher::WatcherCommunicator;
 use crate::util::fs::canonicalize_path_maybe_not_exists;
@@ -810,6 +812,7 @@ impl CliFactory {
     ))
   }
 
+  #[cfg(feature = "tools")]
   fn create_cli_main_worker_options(
     &self,
   ) -> Result<CliMainWorkerOptions, AnyError> {
