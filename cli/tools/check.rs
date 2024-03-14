@@ -79,7 +79,7 @@ impl TypeChecker {
   #[cfg(not(feature = "tools"))]
   pub async fn check(
     &self,
-    graph: Arc<ModuleGraph>,
+    graph: ModuleGraph,
     options: CheckOptions,
   ) -> Result<Arc<ModuleGraph>, AnyError> {
     panic!("Type checking requires 'tools' flag");
