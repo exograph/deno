@@ -1947,7 +1947,7 @@ dependencies = [
  "log",
  "ring",
  "serde",
- "test_util",
+ "test_server",
  "thiserror",
  "tokio",
 ]
