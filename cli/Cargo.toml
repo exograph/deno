@@ -94,7 +94,7 @@ winres.workspace = true
 deno_ast = { workspace = true, features = ["bundler", "cjs", "codegen", "proposal", "react", "sourcemap", "transforms", "typescript", "view", "visit"] }
 deno_cache_dir = { workspace = true }
 deno_config = "=0.14.1"
-deno_core = { workspace = true, features = ["include_js_files_for_snapshotting"] }
+deno_core = { workspace = true }
 deno_doc = { version = "=0.113.1", optional = true, features = ["html"] }
 deno_emit = { version = "=0.38.2", optional = true }
 deno_graph = { version = "=0.69.9", features = ["tokio_executor"] }
